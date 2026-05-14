@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Interview Result{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <div class="result-header">
+        <div class="result-badge">
+            <div class="score-circle-large score-{{ interview.score }}">
+                <span class="score-number">{{ interview.score }}</span>
+                <span class="score-total">/10</span>
+            </div>
+        </div>
+        <h1>Interview Evaluation</h1>
+        <p class="result-type">{{ interview.interview_type }} Interview</p>
+        <p class="result-date">
+            <i class="fas fa-calendar"></i> {{ interview.created_at|date:"F d, Y" }}
+            <i class="fas fa-clock"></i> {{ interview.created_at|time:"H:i" }}
+        </p>
+    </div>
+
+    <!-- Confidence Level -->
+    <div class="confidence-badge confidence-{{ interview.confidence_level|lower }}">
+        <i class="fas fa-chart-line"></i>
+        Confidence Level: {{ interview.confidence_level }}
+    </div>
+
+    <!-- Question & Answer -->
+    <div class="section-card">
+        <h2><i class="fas fa-question-circle"></i> Question</h2>
+        <p class="question-display">{{ interview.question }}</p>
+    </div>
+
+    <div class="section-card">
+        <h2><i class="fas fa-comment"></i> Your Answer</h2>
+        <p class="answer-display">{{ interview.answer }}</p>
+    </div>
+
+    <!-- Evaluation Details -->
+    <div class="evaluation-grid">
+        <div class="evaluation-card strengths">
+            <div class="eval-header">
+                <i class="fas fa-check-circle"></i>
+                <h3>Strengths</h3>
+            </div>
+            <p>{{ interview.strengths }}</p>
+        </div>
+
+        <div class="evaluation-card weaknesses">
+            <div class="eval-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Areas for Improvement</h3>
+            </div>
+            <p>{{ interview.weaknesses }}</p>
+        </div>
+    </div>
+
+    <div class="section-card suggestions">
+        <h2><i class="fas fa-lightbulb"></i> Suggestions for Better Answer</h2>
+        <p>{{ interview.suggestions }}</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="result-actions">
+        <a href="{% url 'interview_selection' %}" class="btn btn-primary">
+            <i class="fas fa-redo"></i> Practice Another Interview
+        </a>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-chart-line"></i> View Dashboard
+        </a>
+        <a href="{% url 'download_report' interview.id %}" class="btn btn-outline">
+            <i class="fas fa-download"></i> Download PDF Report
+        </a>
+    </div>
+</div>
+{% endblock %}

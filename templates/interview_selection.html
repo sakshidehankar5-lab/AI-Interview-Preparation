@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Interview Type{% endblock %}
+
+{% block content %}
+<div class="selection-container">
+    <div class="selection-header">
+        <h1>Choose Your Interview Type</h1>
+        <p>Select the type of interview you want to practice</p>
+    </div>
+
+    <div class="interview-types">
+        <a href="{% url 'start_interview' 'HR' %}" class="interview-type-card">
+            <div class="card-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <h2>HR Interview</h2>
+            <p>Practice behavioral questions, company culture fit, and general HR topics</p>
+            <ul class="card-features">
+                <li><i class="fas fa-check"></i> Tell me about yourself</li>
+                <li><i class="fas fa-check"></i> Strengths & weaknesses</li>
+                <li><i class="fas fa-check"></i> Career goals</li>
+            </ul>
+            <div class="card-action">
+                <span>Start HR Interview</span>
+                <i class="fas fa-arrow-right"></i>
+            </div>
+        </a>
+
+        <a href="{% url 'start_interview' 'Technical' %}" class="interview-type-card">
+            <div class="card-icon">
+                <i class="fas fa-code"></i>
+            </div>
+            <h2>Technical Interview</h2>
+            <p>Test your technical knowledge, coding skills, and problem-solving abilities</p>
+            <ul class="card-features">
+                <li><i class="fas fa-check"></i> Programming concepts</li>
+                <li><i class="fas fa-check"></i> Data structures</li>
+                <li><i class="fas fa-check"></i> System design</li>
+            </ul>
+            <div class="card-action">
+                <span>Start Technical Interview</span>
+                <i class="fas fa-arrow-right"></i>
+            </div>
+        </a>
+
+        <a href="{% url 'start_interview' 'Behavioral' %}" class="interview-type-card">
+            <div class="card-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h2>Behavioral Interview</h2>
+            <p>Practice situational questions and demonstrate your soft skills</p>
+            <ul class="card-features">
+                <li><i class="fas fa-check"></i> Teamwork scenarios</li>
+                <li><i class="fas fa-check"></i> Conflict resolution</li>
+                <li><i class="fas fa-check"></i> Leadership examples</li>
+            </ul>
+            <div class="card-action">
+                <span>Start Behavioral Interview</span>
+                <i class="fas fa-arrow-right"></i>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

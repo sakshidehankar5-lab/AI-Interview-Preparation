@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ interview_type }} Interview{% endblock %}
+
+{% block content %}
+<div class="interview-container">
+    <div class="interview-header">
+        <div class="interview-type-badge badge-{{ interview_type|lower }}">
+            {{ interview_type }} Interview
+        </div>
+        <div id="timer" class="timer">
+            <i class="fas fa-clock"></i>
+            <span id="timerDisplay">00:00</span>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-state">
+        <div class="loader"></div>
+        <p>AI is generating your interview question...</p>
+    </div>
+
+    <!-- Question Display -->
+    <div id="questionSection" class="question-section" style="display: none;">
+        <div class="question-card">
+            <h2>Interview Question</h2>
+            <p id="questionText" class="question-text"></p>
+        </div>
+
+        <!-- Answer Input -->
+        <div class="answer-section">
+            <div class="answer-tabs">
+                <button class="tab-btn active" data-tab="text">
+                    <i class="fas fa-keyboard"></i> Type Answer
+                </button>
+                <button class="tab-btn" data-tab="voice">
+                    <i class="fas fa-microphone"></i> Voice Answer
+                </button>
+            </div>
+
+            <!-- Text Input -->
+            <div id="textTab" class="tab-content active">
+                <textarea id="answerText" placeholder="Type your answer here..." rows="8"></textarea>
+                <div class="char-count">
+                    <span id="charCount">0</span> characters
+                </div>
+            </div>
+
+            <!-- Voice Input -->
+            <div id="voiceTab" class="tab-content">
+                <div class="voice-recorder">
+                    <button id="recordBtn" class="record-btn">
+                        <i class="fas fa-microphone"></i>
+                        <span>Click to Record</span>
+                    </button>
+                    <p id="recordingStatus" class="recording-status"></p>
+                    <div id="transcription" class="transcription"></div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="submit-section">
+                <button id="submitBtn" class="btn btn-primary btn-lg">
+                    <i class="fas fa-paper-plane"></i> Submit Answer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evaluation Loading -->
+    <div id="evaluatingState" class="loading-state" style="display: none;">
+        <div class="loader"></div>
+        <p>AI is evaluating your answer...</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const interviewType = "{{ interview_type }}";
+    let currentQuestion = "";
+    let startTime = Date.now();
+    let timerInterval;
+    let isRecording = false;
+    let recognition = null;
+
+    // Initialize Speech Recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        let finalTranscript = '';
+
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + ' ';
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            document.getElementById('transcription').innerHTML = 
+                '<strong>Transcription:</strong><br>' + finalTranscript + 
+                '<span style="color: #888;">' + interimTranscript + '</span>';
+            document.getElementById('answerText').value = finalTranscript;
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            stopRecording();
+        };
+    }
+
+    // Start timer
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    // Load question
+    async function loadQuestion() {
+        try {
+            const response = await fetch('/api/get-question/');
+            const data = await response.json();
+            
+            if (data.success) {
+                currentQuestion = data.question;
+                document.getElementById('questionText').textContent = currentQuestion;
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('questionSection').style.display = 'block';
+                startTimer();
+            } else {
+                alert('Error loading question: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to load question. Please try again.');
+        }
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        });
+    });
+
+    // Character count
+    document.getElementById('answerText').addEventListener('input', (e) => {
+        document.getElementById('charCount').textContent = e.target.value.length;
+    });
+
+    // Recording
+    document.getElementById('recordBtn').addEventListener('click', () => {
+        if (!recognition) {
+            alert('Speech recognition is not supported in your browser.');
+            return;
+        }
+
+        if (!isRecording) {
+            startRecording();
+        } else {
+            stopRecording();
+        }
+    });
+
+    function startRecording() {
+        recognition.start();
+        isRecording = true;
+        document.getElementById('recordBtn').classList.add('recording');
+        document.getElementById('recordBtn').innerHTML = 
+            '<i class="fas fa-stop"></i><span>Stop Recording</span>';
+        document.getElementById('recordingStatus').textContent = 'Recording...';
+    }
+
+    function stopRecording() {
+        if (recognition) {
+            recognition.stop();
+        }
+        isRecording = false;
+        document.getElementById('recordBtn').classList.remove('recording');
+        document.getElementById('recordBtn').innerHTML = 
+            '<i class="fas fa-microphone"></i><span>Click to Record</span>';
+        document.getElementById('recordingStatus').textContent = 'Recording stopped';
+    }
+
+    // Submit answer
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+        const answer = document.getElementById('answerText').value.trim();
+        
+        if (!answer) {
+            alert('Please provide an answer before submitting.');
+            return;
+        }
+
+        if (answer.length < 20) {
+            alert('Please provide a more detailed answer (at least 20 characters).');
+            return;
+        }
+
+        clearInterval(timerInterval);
+        document.getElementById('questionSection').style.display = 'none';
+        document.getElementById('evaluatingState').style.display = 'block';
+
+        try {
+            const response = await fetch('/api/submit-answer/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    question: currentQuestion,
+                    answer: answer
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                window.location.href = `/interview/result/${data.interview_id}/`;
+            } else {
+                alert('Error submitting answer: ' + data.error);
+                document.getElementById('evaluatingState').style.display = 'none';
+                document.getElementById('questionSection').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to submit answer. Please try again.');
+            document.getElementById('evaluatingState').style.display = 'none';
+            document.getElementById('questionSection').style.display = 'block';
+        }
+    });
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Load question on page load
+    loadQuestion();
+</script>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - AI Interview System{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Welcome, {{ user.username }}!</h1>
+        <p>Track your interview preparation progress</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_interviews }}</h3>
+                <p>Total Interviews</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ avg_score }}/10</h3>
+                <p>Average Score</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{% if avg_score >= 8 %}Excellent{% elif avg_score >= 6 %}Good{% else %}Keep Practicing{% endif %}</h3>
+                <p>Performance</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interview Type Breakdown -->
+    {% if interview_stats %}
+    <div class="section-card">
+        <h2><i class="fas fa-chart-pie"></i> Interview Type Breakdown</h2>
+        <div class="interview-stats">
+            {% for stat in interview_stats %}
+            <div class="interview-stat-item">
+                <div class="stat-header">
+                    <span class="stat-type">{{ stat.interview_type }}</span>
+                    <span class="stat-badge">{{ stat.count }} interview{{ stat.count|pluralize }}</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ stat.progress_width }}%"></div>
+                </div>
+                <div class="stat-score">Average: {{ stat.avg_score|default:0|floatformat:1 }}/10</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Interviews -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2><i class="fas fa-history"></i> Recent Interviews</h2>
+            <a href="{% url 'interview_selection' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Interview
+            </a>
+        </div>
+        
+        {% if recent_interviews %}
+        <div class="interviews-list">
+            {% for interview in recent_interviews %}
+            <div class="interview-item">
+                <div class="interview-info">
+                    <div class="interview-type-badge badge-{{ interview.interview_type|lower }}">
+                        {{ interview.interview_type }}
+                    </div>
+                    <div class="interview-details">
+                        <p class="interview-question">{{ interview.question|truncatewords:15 }}</p>
+                        <p class="interview-date">
+                            <i class="fas fa-calendar"></i> {{ interview.created_at|date:"M d, Y" }}
+                            <i class="fas fa-clock"></i> {{ interview.created_at|time:"H:i" }}
+                        </p>
+                    </div>
+                </div>
+                <div class="interview-score">
+                    <div class="score-circle score-{{ interview.score }}">
+                        {{ interview.score }}/10
+                    </div>
+                    <div class="interview-actions">
+                        <a href="{% url 'interview_result' interview.id %}" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="{% url 'download_report' interview.id %}" class="btn btn-sm btn-outline">
+                            <i class="fas fa-download"></i> PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>No interviews yet</h3>
+            <p>Start your first interview to see your progress here</p>
+            <a href="{% url 'interview_selection' %}" class="btn btn-primary">
+                <i class="fas fa-microphone"></i> Start Interview
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
