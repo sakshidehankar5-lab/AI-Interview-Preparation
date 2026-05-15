@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ai-interview-system
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn ai_interview.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: GROQ_API_KEY
+        sync: false
